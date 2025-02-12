@@ -64,7 +64,7 @@
         opacity: 1;
       }
 
-      100% {
+      75% {
         opacity: 0;
       }
     }
@@ -131,6 +131,18 @@
   }
 
   function initEvents() {
+    document.addEventListener('keydown', () => {
+      $input.focus();
+    })
+    $input.addEventListener('keydown', onkeydown);
+    $input.addEventListener('keyup', onKeyUp);
+  }
+
+  function onkeydown () {
+
+  }
+
+  function onKeyUp () {
 
   }
 
