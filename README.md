@@ -1,0 +1,1 @@
+A simple typing words code with javascript, html and css only.
