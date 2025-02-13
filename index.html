@@ -71,6 +71,14 @@
       color: var(--red);
     }
   }
+
+  x-word {
+    border-bottom: 1.5px solid transparent;
+    transition: border-color 0.3s ease-in-out;
+    &.marked {
+      border-color: var(--red);
+    }
+  }
   
   @keyframes blink {
     0%, 50% {
@@ -150,8 +158,36 @@
     $input.addEventListener('keyup', onKeyUp);
   }
 
-  function onKeyDown () {
+  function onKeyDown (event) {
+    const { key } = event;
 
+    const $currentWord = $paragraph.querySelector('x-word.active')
+    const $currentLetter = $currentWord.querySelector('x-letter.active')
+
+    if(key === ' ') {
+      event.preventDefault();
+      
+      const $nextWord = $currentWord.nextElementSibling;
+      const $nextLetter = $nextWord.querySelector('x-letter');
+
+      $currentWord.classList.remove('active', 'marked');
+      $currentLetter.classList.remove('active');
+
+      if (!$nextWord) {
+        gameOver();
+        return;
+      }
+
+      $nextWord.classList.add('active');
+      $nextLetter.classList.add('active');
+      $input.value = '';
+
+      const hasMissedLetters = $currentWord
+        .querySelectorAll('x-letter:not(.correct)').length > 0;
+
+      const classToAdd = hasMissedLetters ? 'marked' : 'correct';
+      $currentWord.classList.add(classToAdd);
+    }
   }
 
   function onKeyUp () {
