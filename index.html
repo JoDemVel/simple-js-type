@@ -36,7 +36,7 @@
     top: 0;
     left: 0;
     pointer-events: none;
-    /* opacity: 0; */
+    opacity: 0;
   }
 
   p {
@@ -89,6 +89,14 @@
       opacity: 0;
     }
   }
+
+  #game {
+    display: flex;
+  }
+
+  #results {
+    display: none;
+  }
 </style>
 
 <body>
@@ -98,20 +106,24 @@
       <p></p>
       <input autofocus>
     </section>
+    <section id="results">
+      <h2>wpm</h2>
+      <h3></h3>
+      <h2>accuracy</h2>
+      <h3></h3>
+    </section>
   </main>
 </body>
 
 
-<script>
+<script type="module">
+  import { words as INITIAL_WORDS } from './data.js';
+
   const $time = document.querySelector('time');
   const $paragraph = document.querySelector('p');
   const $input = document.querySelector('input');
 
-  const INITIAL_TIME = 30;
-
-  const TEXT = `the quick brown fox jumps over the lazy dog and
-  midudev is trying to clone monkey type for fun and profit using
-  vanilla js for the typing test speed`;
+  const INITIAL_TIME = 3;
 
   let words = [];
   let currentTime = INITIAL_TIME;
@@ -120,7 +132,9 @@
   initEvents();
 
   function initGame() {
-    words = TEXT.split(' ');
+    words = INITIAL_WORDS.toSorted(
+      () => Math.random() - 0.5
+    ).slice(0, 30);
     currentTime = INITIAL_TIME;
 
     $time.textContent = currentTime;
