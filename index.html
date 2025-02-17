@@ -27,7 +27,7 @@
   }
 
   time {
-    color: var(--yellow)
+    color: var(--yellow);
   }
 
   input {
@@ -79,9 +79,10 @@
       border-color: var(--red);
     }
   }
-  
+
   @keyframes blink {
-    0%, 50% {
+    0%,
+    50% {
       opacity: 1;
     }
 
@@ -97,6 +98,38 @@
   #results {
     display: none;
   }
+
+  h2 {
+    font-weight: 400;
+    opacity: 0.4;
+    margin: 0;
+    font-size: 16px;
+  }
+
+  h3 {
+    font-weight: 400;
+    margin: 0;
+    font-size: 24px;
+    color: var(--yellow);
+  }
+
+  button {
+    background: transparent;
+    border: 0;
+    margin-top: 32px;
+    padding: 8px;
+    opacity: .4;
+    display: inline-block;
+    transition: opacity .3s ease-in-out, transform .3s ease-in-out;
+    cursor: pointer;
+    border-radius: 8px;
+
+    &:hover {
+      background: #444;
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
 </style>
 
 <body>
@@ -104,17 +137,36 @@
     <section id="game">
       <time></time>
       <p></p>
-      <input autofocus>
+      <input autofocus />
     </section>
     <section id="results">
       <h2>wpm</h2>
-      <h3></h3>
+      <h3 id="results-wpm"></h3>
+
       <h2>accuracy</h2>
-      <h3></h3>
+      <h3 id="results-accuracy"></h3>
+
+      <button id="restart">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path
+            d="M19.933 13.041a8 8 0 1 1 -9.925 -8.788c3.899 -1 7.935 1.007 9.425 4.747"
+          />
+          <path d="M20 4v5h-5" />
+        </svg>
+      </button>
     </section>
   </main>
 </body>
-
 
 <script type="module">
   import { words as INITIAL_WORDS } from './data.js';
@@ -122,8 +174,13 @@
   const $time = document.querySelector('time');
   const $paragraph = document.querySelector('p');
   const $input = document.querySelector('input');
+  const $game = document.querySelector('#game');
+  const $results = document.querySelector('#results');
+  const $wpm = $results.querySelector('#results-wpm');
+  const $accuracy = $results.querySelector('#results-accuracy');
+  const $button = document.querySelector('#restart');
 
-  const INITIAL_TIME = 3;
+  const INITIAL_TIME = 30;
 
   let words = [];
   let currentTime = INITIAL_TIME;
@@ -132,22 +189,23 @@
   initEvents();
 
   function initGame() {
-    words = INITIAL_WORDS.toSorted(
-      () => Math.random() - 0.5
-    ).slice(0, 30);
+    $game.style.display = 'flex';
+    $results.style.display = 'none';
+    $input.value = '';
+
+    words = INITIAL_WORDS.toSorted(() => Math.random() - 0.5).slice(0, 30);
     currentTime = INITIAL_TIME;
 
     $time.textContent = currentTime;
-    $paragraph.innerHTML = words.map((word, index) => {
-      const letters = word.split('');
+    $paragraph.innerHTML = words
+      .map((word, index) => {
+        const letters = word.split('');
 
-      return `<x-word>
-        ${letters
-          .map(letter => `<x-letter>${letter}</x-letter>`)
-          .join('')
-        }
-      </x-word>`
-    }).join('');
+        return `<x-word>
+        ${letters.map((letter) => `<x-letter>${letter}</x-letter>`).join('')}
+      </x-word>`;
+      })
+      .join('');
 
     const $firstWord = $paragraph.querySelector('x-word');
     $firstWord.classList.add('active');
@@ -161,26 +219,27 @@
         clearInterval(intervalId);
         gameOver();
       }
-    }, 1000)
+    }, 1000);
   }
 
   function initEvents() {
     document.addEventListener('keydown', () => {
       $input.focus();
-    })
+    });
     $input.addEventListener('keydown', onKeyDown);
     $input.addEventListener('keyup', onKeyUp);
+    $button.addEventListener('click', initGame);
   }
 
-  function onKeyDown (event) {
+  function onKeyDown(event) {
     const { key } = event;
 
-    const $currentWord = $paragraph.querySelector('x-word.active')
-    const $currentLetter = $currentWord.querySelector('x-letter.active')
+    const $currentWord = $paragraph.querySelector('x-word.active');
+    const $currentLetter = $currentWord.querySelector('x-letter.active');
 
-    if(key === ' ') {
+    if (key === ' ') {
       event.preventDefault();
-      
+
       const $nextWord = $currentWord.nextElementSibling;
       const $nextLetter = $nextWord.querySelector('x-letter');
 
@@ -196,63 +255,69 @@
       $nextLetter.classList.add('active');
       $input.value = '';
 
-      const hasMissedLetters = $currentWord
-        .querySelectorAll('x-letter:not(.correct)').length > 0;
+      const hasMissedLetters =
+        $currentWord.querySelectorAll('x-letter:not(.correct)').length > 0;
 
       const classToAdd = hasMissedLetters ? 'marked' : 'correct';
       $currentWord.classList.add(classToAdd);
     }
 
-    if(key === 'Backspace') {
+    if (key === 'Backspace') {
       const $prevWord = $currentWord.previousElementSibling;
       // const $prevLetter = $prevWord.querySelector('x-letter:last-child');
       const $prevLetter = $currentLetter.previousElementSibling;
 
-      if(!$prevWord && !$prevLetter) {
+      if (!$prevWord && !$prevLetter) {
         event.preventDefault();
         return;
       }
 
       const $wordMarked = $paragraph.querySelector('x-word.marked');
-      if($wordMarked && !$prevLetter) {
+      if ($wordMarked && !$prevLetter) {
         event.preventDefault();
         $prevWord.classList.remove('marked');
         $prevWord.classList.add('active');
 
         const $letterToGo = $prevWord.querySelector('x-letter:last-child');
-        
+
         $currentLetter.classList.remove('active');
         $letterToGo.classList.add('active');
 
         $input.value = [
-          ...$prevWord.querySelectorAll('x-letter.correct', 'x-letter.incorrect')
-        ].map($el => {
-          return $el.classList.contains('correct') ? $el.textContent : '*';
-        }).join('');
+          ...$prevWord.querySelectorAll(
+            'x-letter.correct',
+            'x-letter.incorrect'
+          ),
+        ]
+          .map(($el) => {
+            return $el.classList.contains('correct') ? $el.textContent : '*';
+          })
+          .join('');
       }
     }
   }
 
-  function onKeyUp () {
-    const $currentWord = $paragraph.querySelector('x-word.active')
-    const $currentLetter = $currentWord.querySelector('x-letter.active')
+  function onKeyUp() {
+    const $currentWord = $paragraph.querySelector('x-word.active');
+    const $currentLetter = $currentWord.querySelector('x-letter.active');
 
-    const currentWord = $currentWord.innerText.trim()
-    $input.maxLength = currentWord.length
+    const currentWord = $currentWord.innerText.trim();
+    $input.maxLength = currentWord.length;
 
-    const $allLetters = $currentWord.querySelectorAll('x-letter')
+    const $allLetters = $currentWord.querySelectorAll('x-letter');
 
-    $allLetters.forEach($letter => $letter.classList.remove('correct', 'incorrect'))
+    $allLetters.forEach(($letter) =>
+      $letter.classList.remove('correct', 'incorrect')
+    );
 
     $input.value.split('').forEach((char, index) => {
-      const $letter = $allLetters[index]
-      const letterToCheck = currentWord[index]
+      const $letter = $allLetters[index];
+      const letterToCheck = currentWord[index];
 
-      const isCorrect = char === letterToCheck
-      const letterClass = isCorrect ? 'correct' : 'incorrect'
-      $letter.classList.add(letterClass)
-
-    })
+      const isCorrect = char === letterToCheck;
+      const letterClass = isCorrect ? 'correct' : 'incorrect';
+      $letter.classList.add(letterClass);
+    });
 
     $currentLetter.classList.remove('active', 'is-last');
     const inputLength = $input.value.length;
@@ -276,7 +341,21 @@
   }
 
   function gameOver() {
-    alert('Game Over');
-  }
+    $game.style.display = 'none';
+    $results.style.display = 'flex';
 
+    const correctWords = $paragraph.querySelectorAll('x-word.correct').length;
+    const correctLetters =
+      $paragraph.querySelectorAll('x-letter.correct').length;
+    const incorrectLetters =
+      $paragraph.querySelectorAll('x-letter.incorrect').length;
+
+    const totalLetters = correctLetters + incorrectLetters;
+    const accuracy =
+      totalLetters > 0 ? (correctLetters / totalLetters) * 100 : 0;
+
+    const wpm = (correctWords * 60) / INITIAL_TIME;
+    $wpm.textContent = wpm;
+    $accuracy.textContent = `${accuracy.toFixed(2)}%`;
+  }
 </script>
